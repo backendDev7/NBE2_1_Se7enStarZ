@@ -73,8 +73,7 @@ public class Orders {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void changeOrderItems(List<OrderItem> orderItems) {
-        this.orderItems.clear();
+    public void addOrderItems(List<OrderItem> orderItems) {
         if (orderItems != null) {
             this.orderItems.addAll(orderItems);
         }

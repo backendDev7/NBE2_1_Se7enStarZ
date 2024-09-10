@@ -1,6 +1,7 @@
 package deu.ex.sevenstars.repository;
 
 import deu.ex.sevenstars.entity.*;
+import deu.ex.sevenstars.exception.OrderException;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,21 @@ public class OrdersRepositoryTest {
 
     @Autowired
     private OrderItemRepository orderItemRepository;
+
+
+
+    @Test
+    public void test1(){
+        String email = "test9@example.com";
+        boolean result = orderRepository.existsByEmail(email);
+        log.info("검색결과 : " + result);
+
+        Orders orders = orderRepository.findByEmail(email).orElseThrow(OrderException.NOT_FOUND::get);
+        log.info(orders);
+
+
+    }
+
 
     @Test
     @Transactional

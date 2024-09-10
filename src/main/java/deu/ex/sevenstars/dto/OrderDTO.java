@@ -23,7 +23,6 @@ public class OrderDTO {
 
     private String postcode;
 
-
     private List<ProductDTO> orderItems;
 
     public OrderDTO(Orders orders) {

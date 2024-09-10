@@ -31,20 +31,27 @@ import java.util.stream.Collectors;
 public class OrderService {
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
 
     public OrderDTO insert(OrderDTO orderDTO) {
         try {
-            Orders orders = orderDTO.toEntity();
+            String email = orderDTO.getEmail();
+            Orders orders;
 
-            //
+            Orders existingOrder = orderRepository.findByEmail(email).orElse(null);
+
+            if (existingOrder != null) {
+                orders = existingOrder;
+            } else {
+                orders = orderDTO.toEntity();
+            }
+
+            // 주문 상품 처리
             List<OrderItem> orderItems = orderDTO.getOrderItems().stream()
                     .map(productDTO -> {
-
+                        // 상품 조회
                         Product product = productRepository.findById(productDTO.getProductId())
                                 .orElseThrow(() -> new RuntimeException("Product not found"));
-
-
+                        // 주문 아이템 생성
                         OrderItem orderItem = OrderItem.builder()
                                 .product(product)
                                 .price(product.getPrice())
@@ -52,17 +59,16 @@ public class OrderService {
                                 .quantity(1)
                                 .build();
 
-
-                        orderItem.changeOrder(orders);
+                        orderItem.changeOrder(orders); // 주문 아이템에 주문 정보 설정
 
                         return orderItem;
                     })
                     .collect(Collectors.toList());
 
-            orders.changeOrderItems(orderItems);
-
+            orders.addOrderItems(orderItems);
+            // 주문 저장
             Orders savedOrder = orderRepository.save(orders);
-            return new OrderDTO(savedOrder); //주문과동시에 orderitmes
+            return new OrderDTO(savedOrder);
         } catch (DataIntegrityViolationException e) {
             throw OrderException.NOT_FOUND.get();
         } catch (Exception e) {
@@ -70,7 +76,6 @@ public class OrderService {
             throw OrderException.NOT_REGISTERED.get();
         }
     }
-
 
     public OrderDTO read(Long orderId){
         Orders orders = orderRepository.findById(orderId).orElseThrow(OrderException.NOT_FOUND::get);
