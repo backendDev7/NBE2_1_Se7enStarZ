@@ -52,20 +52,22 @@ public class OrderService {
 
             // 주문 상품 처리
             List<OrderItem> orderItems = orderDTO.getOrderItems().stream()
-                    .map(productDTO -> {
+                    .map(orderItemDTO -> {
                         // 상품 조회
-                        Product product = productRepository.findById(productDTO.getProductId())
+                        Product product = productRepository.findById(orderItemDTO.getProductId())
                                 .orElseThrow(() -> new RuntimeException("Product not found"));
+
+                        int totalPrice = product.getPrice() * orderItemDTO.getQuantity();
 
                         // 주문 아이템 생성
                         OrderItem orderItem = OrderItem.builder()
                                 .product(product)
-                                .price(product.getPrice())
+                                .price(totalPrice) // 계산된 총 가격
                                 .category(product.getCategory())
-                                .quantity(1)
+                                .quantity(orderItemDTO.getQuantity())  // DTO에서 수량 가져오기
                                 .build();
-
-                        orderItem.changeOrder(orders); // 주문 아이템에 주문 정보 설정
+                        // 주문 아이템에 주문 정보 설정
+                        orderItem.changeOrder(orders);
 
                         return orderItem;
                     })
@@ -83,7 +85,6 @@ public class OrderService {
             throw OrderException.NOT_REGISTERED.get();
         }
     }
-
 
     public OrderDTO read(Long orderId){
         Orders orders = orderRepository.findById(orderId).orElseThrow(OrderException.NOT_FOUND::get);
