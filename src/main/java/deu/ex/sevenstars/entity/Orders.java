@@ -73,10 +73,34 @@ public class Orders {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void changeOrderItems(List<OrderItem> orderItems) {
-        this.orderItems.clear();
-        if (orderItems != null) {
-            this.orderItems.addAll(orderItems);
+    public void addOrderItems(List<OrderItem> newOrderItems) {
+        if (newOrderItems != null) { // 1. 새로운 주문 아이템 리스트가 null이 아닌 경우에만 처리
+            // 새로운 주문 아이템 리스트를 순회합니다.
+            for (OrderItem newItem : newOrderItems) {
+                boolean itemFound = false; // 현재 아이템이 이미 존재하는지 여부를 표시
+
+                // 기존 주문 아이템 리스트를 순회합니다.
+                for (OrderItem existingItem : this.orderItems) {
+                    // 새 아이템의 제품과 기존 아이템의 제품이 동일한지 확인합니다.
+                    if (existingItem.getProduct().equals(newItem.getProduct())) {
+                        // 동일한 제품이 이미 존재하면, 기존 아이템의 수량을 증가시킵니다.
+                        existingItem.changeQuantity(existingItem.getQuantity() + newItem.getQuantity());
+                        itemFound = true; // 동일한 제품이 존재함을 표시
+                        break; // 동일한 제품을 찾았으므로, 더 이상 비교할 필요가 없습니다.
+                    }
+                }
+
+                // 기존 주문 아이템 리스트에서 동일한 제품을 찾지 못한 경우
+                if (!itemFound) {
+                    // 새 아이템의 주문 정보를 현재 주문으로 설정합니다.
+                    newItem.changeOrder(this);
+                    // 새 아이템을 기존 주문 아이템 리스트에 추가합니다.
+                    this.orderItems.add(newItem);
+                }
+            }
+            // 주문이 업데이트된 시간을 기록합니다.
+            this.updatedAt = LocalDateTime.now();
         }
     }
+
 }

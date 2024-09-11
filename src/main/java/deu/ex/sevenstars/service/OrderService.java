@@ -35,16 +35,29 @@ public class OrderService {
 
     public OrderDTO insert(OrderDTO orderDTO) {
         try {
-            Orders orders = orderDTO.toEntity();
+            String email = orderDTO.getEmail();
 
-            //
+            // 이메일로 기존 주문 찾기 (없으면 null 반환)
+            Orders existingOrder = orderRepository.findByEmail(email)
+                    .orElse(null);
+
+            Orders orders;
+            if (existingOrder != null) {
+                // 기존 주문이 있으면 그 주문을 사용
+                orders = existingOrder;
+            } else {
+                // 기존 주문이 없으면 새로운 주문 생성
+                orders = orderDTO.toEntity();
+            }
+
+            // 주문 상품 처리
             List<OrderItem> orderItems = orderDTO.getOrderItems().stream()
                     .map(productDTO -> {
-
+                        // 상품 조회
                         Product product = productRepository.findById(productDTO.getProductId())
                                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-
+                        // 주문 아이템 생성
                         OrderItem orderItem = OrderItem.builder()
                                 .product(product)
                                 .price(product.getPrice())
@@ -52,17 +65,17 @@ public class OrderService {
                                 .quantity(1)
                                 .build();
 
-
-                        orderItem.changeOrder(orders);
+                        orderItem.changeOrder(orders); // 주문 아이템에 주문 정보 설정
 
                         return orderItem;
                     })
                     .collect(Collectors.toList());
 
-            orders.changeOrderItems(orderItems);
+            orders.addOrderItems(orderItems);
 
+            // 주문 저장
             Orders savedOrder = orderRepository.save(orders);
-            return new OrderDTO(savedOrder); //주문과동시에 orderitmes
+            return new OrderDTO(savedOrder);
         } catch (DataIntegrityViolationException e) {
             throw OrderException.NOT_FOUND.get();
         } catch (Exception e) {
