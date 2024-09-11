@@ -2,12 +2,8 @@ package deu.ex.sevenstars.dto;
 
 import deu.ex.sevenstars.entity.Orders;
 import deu.ex.sevenstars.entity.OrderItem;
-import deu.ex.sevenstars.entity.Product;
-import deu.ex.sevenstars.repository.ProductRepository;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,15 +12,11 @@ import java.util.stream.Collectors;
 public class OrderDTO {
 
     private Long orderId;
-
     private String email;
-
     private String address;
-
     private String postcode;
-
-
-    private List<ProductDTO> orderItems;
+    private List<OrderItemDTO> orderItems;  // OrderItemDTO 리스트로 수정
+    private int payPrice;
 
     public OrderDTO(Orders orders) {
         this.orderId = orders.getOrderId();
@@ -32,8 +24,11 @@ public class OrderDTO {
         this.address = orders.getAddress();
         this.postcode = orders.getPostcode();
         this.orderItems = orders.getOrderItems().stream()
-                .map(orderItem -> new ProductDTO(orderItem.getProduct()))
+                .map(OrderItemDTO::new)
                 .collect(Collectors.toList());
+        this.payPrice = orders.getOrderItems().stream()
+                .mapToInt(orderItem -> orderItem.getPrice() * orderItem.getQuantity())
+                .sum();
     }
 
     public Orders toEntity() {

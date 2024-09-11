@@ -20,6 +20,7 @@ public class ProductDTO {
 
     private String description;
 
+
     public ProductDTO(Product product) {
         this.productId = product.getProductId();
         this.category = product.getCategory();
